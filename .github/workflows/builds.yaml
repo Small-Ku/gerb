@@ -61,7 +61,7 @@ jobs:
           run: echo "::set-output name=cachekey::gvsbuild-${{ env.gvsbuildupdate }}-${{ env.gvsbuildref }}"
   build:
     name: Build on ${{ matrix.build }}
-    needs: ${{ matrix.needs }}
+    needs: gvsbuild
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -73,19 +73,16 @@ jobs:
             rust: stable
             artifact_name: 'gerb-linux-amd64'
             target: x86_64-unknown-linux-gnu
-            needs:
           - build: windows-x86_64
             os: windows-2022
             rust: stable-msvc
             artifact_name: 'gerb-windows-x86_64'
             target: x86_64-pc-windows-msvc
-            needs: gvsbuild
           - build: macos-x86_64
             os: macos-latest
             rust: stable
             target: x86_64-apple-darwin
             artifact_name: 'gerb-darwin-amd64'
-            needs:
          #- build: linux-aarch64
          #  os: ubuntu-latest
          #  rust: stable
