@@ -11,24 +11,81 @@ on:
       - v*
 
 jobs:
+  gvsbuild:
+    name: build GTK binaries with gvsbuild
+    runs-on: windows-2022
+    env:
+      gvsbuildref: 078140d0b7dcfd6147b3063114fb38365b7ad5a1
+      gvsbuildupdate: 1
+    outputs:
+      cachekey: ${{ steps.output.outputs.cachekey }}
+    steps:
+      # this is needed for the cache restore to work
+        - name: (GTK binaries) create dir
+          run: mkdir C:\gtk-build\gtk\x64\release
+        - name: (GTK binaries) get from cache
+          uses: actions/cache@v2
+          id: cache
+          with:
+            path: C:\gtk-build\gtk\x64\release\**
+            key: gvsbuild-${{ env.gvsbuildupdate }}-${{ env.gvsbuildref }}
+        - name: (GTK binaries) checkout gvsbuild
+          if: steps.cache.outputs.cache-hit != 'true'
+          uses: actions/checkout@v2
+          with:
+            repository: wingtk/gvsbuild
+            ref: ${{ env.gvsbuildref }}
+            path: gvsbuild
+        # Temporarily move the preinstalled git, it causes errors related to cygwin.
+        - name: (GTK binaries) move git binary
+          if: steps.cache.outputs.cache-hit != 'true'
+          run: |
+            move "C:\Program Files\Git\usr\bin" "C:\Program Files\Git\usr\notbin"
+            move "C:\Program Files\Git\bin" "C:\Program Files\Git\notbin"
+          shell: cmd
+        - name: (GTK binaries) install gvsbuild
+          if: steps.cache.outputs.cache-hit != 'true'
+          working-directory: gvsbuild
+          run: python -m pip install .
+        - name: (GTK binaries) run gvsbuild
+          if: steps.cache.outputs.cache-hit != 'true'
+          run: gvsbuild build --platform=x64 --vs-ver=17 --msys-dir=C:\msys64 gtk3 graphene
+        - name: (GTK binaries) restore git binary
+          if: steps.cache.outputs.cache-hit != 'true'
+          run: |
+            move "C:\Program Files\Git\usr\notbin" "C:\Program Files\Git\usr\bin"
+            move "C:\Program Files\Git\notbin" "C:\Program Files\Git\bin"
+          shell: cmd
+        - name: (GTK binaries) output cache key
+          id: output
+          run: echo "::set-output name=cachekey::gvsbuild-${{ env.gvsbuildupdate }}-${{ env.gvsbuildref }}"
   build:
     name: Build on ${{ matrix.build }}
+    needs: ${{ matrix.needs }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        build: [linux-amd64, macos-x86_64] #, linux-aarch64, macos-arm64]
+        build: [linux-amd64, windows-x86_64, macos-x86_64] #, linux-aarch64, macos-arm64]
         include:
           - build: linux-amd64
             os: ubuntu-latest
             rust: stable
             artifact_name: 'gerb-linux-amd64'
             target: x86_64-unknown-linux-gnu
+            needs:
+          - build: windows-x86_64
+            os: windows-2022
+            rust: stable-msvc
+            artifact_name: 'gerb-windows-x86_64'
+            target: x86_64-pc-windows-msvc
+            needs: gvsbuild
           - build: macos-x86_64
             os: macos-latest
             rust: stable
             target: x86_64-apple-darwin
             artifact_name: 'gerb-darwin-amd64'
+            needs:
          #- build: linux-aarch64
          #  os: ubuntu-latest
          #  rust: stable
@@ -99,6 +156,20 @@ jobs:
           set -ex
           sudo apt install libgtk-3-dev
           cargo install cargo-deb
+      - name: Install dependencies (windows)
+        if: matrix.os == 'windows-2022'
+        run: mkdir C:\gtk-build\gtk\x64\release
+      - if: matrix.os == 'windows-2022'
+        uses: actions/cache@v2
+        id: cache
+        with:
+          path: C:\gtk-build\gtk\x64\release\**
+          key: ${{needs.gvsbuild.outputs.cachekey}}
+      - if: matrix.os == 'windows-2022'
+        run: |
+          echo "PKG_CONFIG=C:\gtk-build\gtk\x64\release\bin\pkgconf.exe" >> $GITHUB_ENV
+          echo "C:\gtk-build\gtk\x64\release\bin" >> $GITHUB_PATH
+        shell: bash
       - name: Build binary
         run: |
           cargo build --release
