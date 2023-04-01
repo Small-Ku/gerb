@@ -64,6 +64,9 @@ jobs:
     name: Build on ${{ matrix.build }}
     needs: gvsbuild
     runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash
     strategy:
       fail-fast: false
       matrix:
@@ -117,7 +120,6 @@ jobs:
         # around a bug in the 'cache' action that causes directories outside of
         # the workspace dir to be saved/restored incorrectly.
         run: echo "CARGO_HOME=$(pwd)/.cargo_home" >> $GITHUB_ENV
-        shell: bash
       - id: cache-cargo
         name: Cache cargo configuration and installations
         uses: actions/cache@v3
@@ -132,16 +134,13 @@ jobs:
           [build]
           target = "${{ matrix.target }}"
           EOF
-        shell: bash
       - name: Install dependencies (macos x86_64)
         if: matrix.os == 'macos-latest' && matrix.target == 'x86_64-apple-darwin'
-        shell: bash
         run: |
           set -ex
           brew install librsvg gtk+3 gnome-icon-theme
       - name: Install dependencies (macos arm64)
         if: matrix.os == 'macos-latest' && matrix.target == 'aarch64-apple-darwin'
-        shell: bash
         run: |
           set -ex
           #arch -arm64e bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh)"
@@ -171,7 +170,6 @@ jobs:
         run: |
           echo "PKG_CONFIG=C:\gtk-build\gtk\x64\release\bin\pkgconf.exe" >> $GITHUB_ENV
           echo "C:\gtk-build\gtk\x64\release\bin" >> $GITHUB_PATH
-        shell: bash
       - name: Build binary
         run: |
           cargo build --release
@@ -186,7 +184,6 @@ jobs:
           retention-days: 30
       - name: Build deb package
         if: matrix.os == 'ubuntu-latest' && matrix.target == 'x86_64-unknown-linux-gnu'
-        shell: bash
         run: |
           cargo deb --target=${{ matrix.target }}
       - name: Upload Artifacts
