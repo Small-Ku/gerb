@@ -67,6 +67,7 @@ jobs:
         shell: bash
   test:
     name: Test on ${{ matrix.build }}
+    needs: gvsbuild
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -137,6 +138,7 @@ jobs:
           [build]
           target = "${{ matrix.target }}"
           EOF
+        shell: bash
       - if: ${{ steps.cache-cargo.outputs.cache-hit != 'true' }} && matrix.target
         name: Add lint dependencies
         run: |
