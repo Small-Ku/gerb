@@ -228,7 +228,7 @@ impl SettingsInner {
             let config_dir = dirs::config_dir().expect("Could not detect config directory for user");
             let path = config_dir.join("gerb").join("config.toml");
             Some(path)
-        })?;
+        }).expect("Could not detect config directory for user");
         validate_path(&path).map_err(|err| {
             format!(
                 "Cannot access configuration file in {}: {}",
