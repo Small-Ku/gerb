@@ -212,31 +212,29 @@ impl SettingsInner {
             Ok(())
         }
 
-        let xdg_dirs = xdg::BaseDirectories::with_prefix("gerb")
-            .map_err(|err| format!("Could not detect XDG directories for user: {}", err))?;
-
-        if let Ok(path) = std::env::var("GERB_CONFIG") {
+        let path = if let Some(path) = std::env::var_os("GERB_CONFIG") {
             let retval = PathBuf::from(path);
             if let Err(err) = validate_path(&retval) {
                 eprintln!("Could not access configuration file `{}` from environment variable `GERB_CONFIG`: {}\nFalling back to default configuration location...", retval.display(), err);
+                None
             } else {
-                return Ok(retval);
+                Some(retval)
             }
-        }
+        } else {
+            None
+        };
 
-        let path = xdg_dirs.place_config_file("config.toml").map_err(|err| {
-            format!(
-                "Cannot create configuration directory in {}: {}",
-                xdg_dirs.get_config_home().display(),
-                err
-            )
+        let path = path.or_else(|| {
+            let config_dir = dirs::config_dir().ok_or_else(|| format!("Could not detect config directory for user"))?;
+            let path = config_dir.join("gerb").join("config.toml");
+            Some(path)
         })?;
         validate_path(&path).map_err(|err| {
             format!(
                 "Cannot access configuration file in {}: {}",
-                path.display(),
-                err
-            )
+                    path.display(),
+                    err
+                )
         })?;
         Ok(path)
     }
