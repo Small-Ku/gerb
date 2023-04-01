@@ -77,16 +77,19 @@ jobs:
             rust: stable
             artifact_name: 'gerb-linux-amd64'
             target: x86_64-unknown-linux-gnu
+            shell: bash
           - build: windows-x86_64
             os: windows-2022
             rust: stable-msvc
             artifact_name: 'gerb-windows-x86_64'
             target: x86_64-pc-windows-msvc
+            shell: pwsh
           - build: macos-x86_64
             os: macos-latest
             rust: stable
             target: x86_64-apple-darwin
             artifact_name: 'gerb-darwin-amd64'
+            shell: bash
          #- build: linux-aarch64
          #  os: ubuntu-latest
          #  rust: stable
@@ -173,6 +176,9 @@ jobs:
       - name: Build binary
         run: |
           cargo build --release
+        shell: ${{ matrix.shell }}
+      - name: Move binary
+        run: |
           mv target/*/release/gerb target/gerb || true
           mv target/release/gerb target/gerb || true
       - name: Upload Artifacts
