@@ -196,7 +196,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: 'gtk-windows'
-          path: C:\gtk-build\gtk\x64\release\**
+          path: C:\gtk-build\gtk\x64\release\**.dll
           if-no-files-found: error
           retention-days: 30
       - name: Build deb package
