@@ -194,7 +194,9 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: ${{ matrix.artifact_name }}
-          path: target/**/release/gerb
+          path: |
+            target/**/release
+            target/release
           if-no-files-found: error
           retention-days: 30
       - name: Build deb package
