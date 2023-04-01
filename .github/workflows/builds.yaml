@@ -176,27 +176,27 @@ jobs:
         run: |
           cargo build --release
       - name: Move binary
-        if: matrix.os != 'windows-2022'
         run: |
           mv target/*/release/gerb target/gerb || true
           mv target/release/gerb target/gerb || true
+          mv target/*/release/gerb target/gerb.exe || true
+          mv target/release/gerb target/gerb.exe || true
         shell: bash
       - name: Upload Artifacts
-        if: matrix.os != 'windows-2022'
-        uses: actions/upload-artifact@v3
-        with:
-          name: ${{ matrix.artifact_name }}
-          path: target/gerb
-          if-no-files-found: error
-          retention-days: 30
-      - name: Upload Artifacts (windows)
-        if: matrix.os == 'windows-2022'
         uses: actions/upload-artifact@v3
         with:
           name: ${{ matrix.artifact_name }}
           path: |
-            target/**/release
-            target/release
+            target/gerb
+            target/gerb.exe
+          if-no-files-found: error
+          retention-days: 30
+      - name: Upload GTK (windows)
+        if: matrix.os == 'windows-2022'
+        uses: actions/upload-artifact@v3
+        with:
+          name: 'gtk-windows'
+          path: C:\gtk-build\gtk\x64\release\**
           if-no-files-found: error
           retention-days: 30
       - name: Build deb package
