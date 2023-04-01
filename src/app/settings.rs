@@ -225,7 +225,7 @@ impl SettingsInner {
         };
 
         let path = path.or_else(|| {
-            let config_dir = dirs::config_dir().ok("")?;
+            let config_dir = dirs::config_dir().expect("Could not detect config directory for user");
             let path = config_dir.join("gerb").join("config.toml");
             Some(path)
         })?;
