@@ -179,8 +179,14 @@ jobs:
         run: |
           mv target/*/release/gerb target/gerb || true
           mv target/release/gerb target/gerb || true
-          mv target/*/release/gerb target/gerb.exe || true
-          mv target/release/gerb target/gerb.exe || true
+          mv target/*/release/gerb.exe target/gerb.exe || true
+          mv target/release/gerb.exe target/gerb.exe || true
+        shell: bash
+      - name: Move DLLs (windows)
+        if: matrix.os == 'windows-2022'
+        run: |
+          ldd target/gerb.exe
+          ldd target/gerb.exe | grep '\/mingw.*\.dll' -o | xargs -I{} cp "{}" target/
         shell: bash
       - name: Upload Artifacts
         uses: actions/upload-artifact@v3
@@ -189,14 +195,7 @@ jobs:
           path: |
             target/gerb
             target/gerb.exe
-          if-no-files-found: error
-          retention-days: 30
-      - name: Upload GTK (windows)
-        if: matrix.os == 'windows-2022'
-        uses: actions/upload-artifact@v3
-        with:
-          name: 'gtk-windows'
-          path: C:\gtk-build\gtk\x64\release\**.dll
+            target/*.exe
           if-no-files-found: error
           retention-days: 30
       - name: Build deb package
