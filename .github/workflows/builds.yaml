@@ -187,6 +187,8 @@ jobs:
         run: |
           ldd target/gerb.exe
           ldd target/gerb.exe | grep '\/mingw.*\.dll' -o | xargs -I{} cp "{}" target/
+          ldd target/gerb.exe | grep '\/c\/gtk-build\/gtk\/x64\/release\/bin.*\.dll' -o | xargs -I{} cp "{}" target/
+          ldd target/gerb.exe | grep '\/c\/hostedtoolcache\/windows\/Python.*\.dll' -o | xargs -I{} cp "{}" target/
         shell: bash
       - name: Upload Artifacts
         uses: actions/upload-artifact@v3
@@ -195,7 +197,7 @@ jobs:
           path: |
             target/gerb
             target/gerb.exe
-            target/*.exe
+            target/*.dll
           if-no-files-found: error
           retention-days: 30
       - name: Build deb package
