@@ -189,7 +189,6 @@ jobs:
           ldd target/pkg/gerb.exe | grep -E '\/(mingw|c\/gtk-build\/gtk\/x64\/release\/bin|c\/hostedtoolcache\/windows\/Python).*\.dll' -o | xargs -I{} cp "{}" target/pkg
           mkdir -p target/pkg/share/glib-2.0/schemas
           cp /c/gtk-build/gtk/x64/release/share/glib-2.0/schemas/gschemas.compiled target/pkg/share/glib-2.0/schemas/gschemas.compiled
-          cp -r /c/gtk-build/gtk/x64/release/share/icons target/pkg/share/icons
         shell: bash
       - name: Upload Artifacts
         uses: actions/upload-artifact@v3
